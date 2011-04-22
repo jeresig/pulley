@@ -7,8 +7,9 @@
 
 // Specify the following to match what you use
 // for your project
-var user_repo = "jquery/jquery",
-	tracker = "http://bugs.jquery.com/ticket/",
+var repos = {
+		"jquery/jquery": "http://bugs.jquery.com/ticket/"
+	},
 
 	// You can specify these inline or in the Git config
 	// http://help.github.com/git-email-settings/
@@ -21,24 +22,39 @@ var sys = require("sys"),
 	spawn = child.spawn,
 	http = require("https"),
 	id = process.argv[2],
-	done = process.argv[3];
+	done = process.argv[3],
+	user_repo = "",
+	tracker = "";
 
 process.stdout.write( "Initializing... " );
 
 // If the user or token is blank, check git config and fill them in from there
-if ( ! github_user || ! github_token ) {
+if ( !github_user || !github_token ) {
 	exec( "git config --get-regexp github", function( error, stdout, stderr ) {
 		github_user = github_user || (/github.user (.*)/.exec( stdout ) || [])[1];
 		github_token = github_token || (/github.token (.*)/.exec( stdout ) || [])[1];
-	});
-}
 
-// If user and token are good, run init. Otherwise exit with a message
-if ( github_user && github_token ) {
-	init();
+		// If user and token are good, run init. Otherwise exit with a message
+		if ( github_user && github_token ) {
+			exec( "git remote -v show origin", function( error, stdout, stderr ) {
+				user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
+				tracker = repos[ user_repo ];
+
+				if ( user_repo ) {
+					init();
+
+				} else {
+					exit( "External repository not found." );
+				}
+			});
+
+		} else {
+			exit( "Please specify a Github username and token:\n  http://help.github.com/git-email-settings/" );
+		}
+	});
 
 } else {
-	exit( "Please specify a Github username and token: http://help.github.com/git-email-settings/" );
+	init();
 }
 
 function init() {
@@ -184,7 +200,9 @@ function commit( pull ) {
 			urls.push( "https://github.com/" + user_repo + "/pull/" + id );
 
 			msg += (bugs.map(function( num ) {
-				urls.push( tracker + num );
+				if ( tracker ) {
+					urls.push( tracker + num );
+				}
 
 				return "#" + num;
 			}).join(", ") || "Fixed #????") + ".";
