@@ -27,7 +27,7 @@ var // Application requirements
 	config;
 
 // Initialize config file
-config = new Function( "return " + fs.readFileSync( "config.js" ) )();
+config = new Function( "return " + fs.readFileSync( __dirname + "/config.js" ) )();
 
 process.stdout.write( "Initializing... " );
 
