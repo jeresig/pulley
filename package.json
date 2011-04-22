@@ -1,0 +1,16 @@
+{
+	"name": "pulley",
+	"description": "Easy Github Pull Request Lander",
+	"keywords": [ "github", "git", "pull" ],
+	"version": "0.1.0",
+	"homepage": "https://github.com/jeresig/pulley",
+	"author": "John Resig (http://ejohn.org/)",
+	"engines": { "node": "0.4 || 0.5" },
+	"repository": {
+		"type": "git",
+		"url": "git://github.com/jeresig/pulley.git"
+	},
+	"licenses": {
+		"type": "MIT"
+	}
+}
