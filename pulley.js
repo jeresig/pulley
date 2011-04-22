@@ -5,11 +5,9 @@
  * MIT Licensed
  */
 
-// Specify the following to match what you use
-// for your project
+// Use the follow to specify custom bug tracker URLs
 var repos = {
-		"jquery/jquery": "http://bugs.jquery.com/ticket/",
-		"jeresig/pulley": "https://github.com/jeresig/pulley/issues/"
+		"jquery/jquery": "http://bugs.jquery.com/ticket/"
 	},
 
 	// You can specify these inline or in the Git config
@@ -42,6 +40,8 @@ if ( !github_user || !github_token ) {
 				tracker = repos[ user_repo ];
 
 				if ( user_repo ) {
+					tracker = tracker || "https://github.com/" + user_repo + "/issues/"
+
 					init();
 
 				} else {
