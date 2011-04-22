@@ -2,7 +2,7 @@
 	"name": "pulley",
 	"description": "Easy Github Pull Request Lander",
 	"keywords": [ "github", "git", "pull" ],
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"homepage": "https://github.com/jeresig/pulley",
 	"author": "John Resig (http://ejohn.org/)",
 	"engines": { "node": "0.4 || 0.5" },
