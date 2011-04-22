@@ -1,7 +1,7 @@
 {
 	// Use the follow to specify custom bug tracker URLs
 	repos: {
-		"rwldrn/sequence": ""
+		"rwldrn/sequence": false
 	},
 	// You can specify these inline or in the Git config
 	// http://help.github.com/git-email-settings/
