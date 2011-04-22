@@ -5,39 +5,44 @@
  * MIT Licensed
  */
 
-// Use the follow to specify custom bug tracker URLs
-var repos = {
-		"jquery/jquery": "http://bugs.jquery.com/ticket/"
-	},
+var // Application requirements
+	sys = require( "sys" ),
+	child = require( "child_process" ),
+	http = require( "https" ),
+	fs = require( "fs" ),
 
-	// You can specify these inline or in the Git config
-	// http://help.github.com/git-email-settings/
-	github_user = "",
-	github_token = "";
-
-var sys = require("sys"),
-	child = require("child_process"),
+	// Process references
 	exec = child.exec,
 	spawn = child.spawn,
-	http = require("https"),
+
+	// Process arguments
 	id = process.argv[2],
 	done = process.argv[3],
+
+	// Localized application references
 	user_repo = "",
-	tracker = "";
+	tracker = "", 
+
+	// Undef declarations
+	config;
+
+// Initialize config file
+config = new Function( "return " + fs.readFileSync( __dirname + "/config.js" ) )();
 
 process.stdout.write( "Initializing... " );
 
 // If the user or token is blank, check git config and fill them in from there
-if ( !github_user || !github_token ) {
+if ( !config.gitconfig.user || !config.gitconfig.token ) {
 	exec( "git config --get-regexp github", function( error, stdout, stderr ) {
-		github_user = github_user || (/github.user (.*)/.exec( stdout ) || [])[1];
-		github_token = github_token || (/github.token (.*)/.exec( stdout ) || [])[1];
+
+		config.gitconfig.user = config.gitconfig.user || (/github.user (.*)/.exec( stdout ) || [])[1];
+		config.gitconfig.token = config.gitconfig.token || (/github.token (.*)/.exec( stdout ) || [])[1];
 
 		// If user and token are good, run init. Otherwise exit with a message
-		if ( github_user && github_token ) {
+		if ( config.gitconfig.user && config.gitconfig.token ) {
 			exec( "git remote -v show origin", function( error, stdout, stderr ) {
 				user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
-				tracker = repos[ user_repo ];
+				tracker = config.repos[ user_repo ];
 
 				if ( user_repo ) {
 					tracker = tracker || "https://github.com/" + user_repo + "/issues/"
@@ -63,7 +68,25 @@ function init() {
 		exit( "No pull request ID specified, please provide one." );
 	}
 
-	exec( "git status", function( error, stdout, stderr ) {
+  // If gitconfig user/token were provided, we still need to get a repo label
+  if ( !user_repo && ( config.gitconfig.user && config.gitconfig.token ) ) {
+
+    exec( "git remote -v show origin", function( error, stdout, stderr ) {
+
+      user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
+
+      getStatus();
+
+    });
+  } else {
+
+    getStatus();
+  }
+}
+
+function getStatus() {
+
+  exec( "git status", function( error, stdout, stderr ) {
 		if ( /Changes to be committed/i.test( stdout ) ) {
 			if ( done ) {
 				getPullData();
@@ -79,7 +102,6 @@ function init() {
 			} else {
 				exit( "Please stash files before attempting a pull/merge." );
 			}
-
 		} else {
 			if ( done ) {
 				exit( "It looks like you've broken your merge attempt." );
@@ -90,6 +112,7 @@ function init() {
 		}
 	});
 }
+
 
 function getPullData() {
 	process.stdout.write( "done.\n" );
@@ -235,7 +258,7 @@ function commit( pull ) {
 function closePull( commit ) {
 	process.stdout.write( "Commenting on and closing pull request... " );
 
-	var auth = "login=" + github_user + "&token=" + github_token;
+	var auth = "login=" + config.gitconfig.user + "&token=" + config.gitconfig.token;
 
 	http.request({
 		host: "github.com",
