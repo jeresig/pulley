@@ -168,7 +168,7 @@ function commit( pull ) {
 
 	http.request({
 		host: "github.com",
-		post: 443,
+		port: 443,
 		path: "/" + user_repo + "/pull/" + id + ".patch"
 	}, function( res ) {
 		var data = [];
