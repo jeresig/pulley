@@ -179,7 +179,7 @@ function commit( pull ) {
 
 		res.on( "end", function() {
 			var author = (/From: (.*)/.exec( data.join("") ) || [])[1],
-				tmp = {}, bugs = [], urls = [], msg = "",
+				tmp = {}, bugs, urls = [], msg = "",
 				search = pull.title + " " + pull.body,
 				findBug = /#(\d{4,5})/g,
 				match;
