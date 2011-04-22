@@ -42,7 +42,7 @@ if ( !config.gitconfig.user || !config.gitconfig.token ) {
 		if ( config.gitconfig.user && config.gitconfig.token ) {
 			exec( "git remote -v show origin", function( error, stdout, stderr ) {
 				user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
-				tracker = config.gitconfig.token[ user_repo ];
+				tracker = config.repos[ user_repo ];
 
 				if ( user_repo ) {
 					tracker = tracker || "https://github.com/" + user_repo + "/issues/"
@@ -68,7 +68,25 @@ function init() {
 		exit( "No pull request ID specified, please provide one." );
 	}
 
-	exec( "git status", function( error, stdout, stderr ) {
+  // If gitconfig user/token were provided, we still need to get a repo label
+  if ( !user_repo && ( config.gitconfig.user && config.gitconfig.token ) ) {
+
+    exec( "git remote -v show origin", function( error, stdout, stderr ) {
+
+      user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
+
+      getStatus();
+
+    });
+  } else {
+
+    getStatus();
+  }
+}
+
+function getStatus() {
+
+  exec( "git status", function( error, stdout, stderr ) {
 		if ( /Changes to be committed/i.test( stdout ) ) {
 			if ( done ) {
 				getPullData();
@@ -84,7 +102,6 @@ function init() {
 			} else {
 				exit( "Please stash files before attempting a pull/merge." );
 			}
-
 		} else {
 			if ( done ) {
 				exit( "It looks like you've broken your merge attempt." );
@@ -95,6 +112,7 @@ function init() {
 		}
 	});
 }
+
 
 function getPullData() {
 	process.stdout.write( "done.\n" );
