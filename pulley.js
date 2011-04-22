@@ -25,21 +25,20 @@ var sys = require("sys"),
 
 process.stdout.write( "Initializing... " );
 
+// If the user or token is blank, check git config and fill them in from there
+if ( ! github_user || ! github_token ) {
+	exec( "git config --get-regexp github", function( error, stdout, stderr ) {
+		github_user = github_user || (/github.user (.*)/.exec( stdout ) || [])[1];
+		github_token = github_token || (/github.token (.*)/.exec( stdout ) || [])[1];
+	});
+}
+
+// If user and token are good, run init. Otherwise exit with a message
 if ( github_user && github_token ) {
 	init();
 
 } else {
-	exec( "git config --get-regexp github", function( error, stdout, stderr ) {
-		github_user = (/github.user (.*)/.exec( stdout ) || [])[1];
-		github_token = (/github.token (.*)/.exec( stdout ) || [])[1];
-
-		if ( github_user && github_token ) {
-			init();
-
-		} else {
-			exit( "Please specify a Github username and token: http://help.github.com/git-email-settings/" );
-		}
-	});
+	exit( "Please specify a Github username and token: http://help.github.com/git-email-settings/" );
 }
 
 function init() {
