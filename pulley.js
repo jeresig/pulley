@@ -179,7 +179,7 @@ function commit( pull ) {
 
 		res.on( "end", function() {
 			var author = (/From: (.*)/.exec( data.join("") ) || [])[1],
-				tmp = {}, bugs, urls = [], msg = "",
+				tmp = {}, urls = [], msg = "",
 				search = pull.title + " " + pull.body,
 				findBug = /#(\d{4,5})/g,
 				match;
@@ -188,20 +188,17 @@ function commit( pull ) {
 				tmp[ match[1] ] = 1;
 			}
 			
-			bugs = Object.keys( tmp );
-			bugs.sort();
-
 			msg = "Landing pull request " + id + ". " + pull.title + " Fixes ";
 
 			urls.push( "https://github.com/" + user_repo + "/pull/" + id );
 
-			msg += (bugs.map(function( num ) {
+			msg += (Object.keys( tmp ).sort().map(function( num ) {
 				if ( tracker ) {
 					urls.push( tracker + num );
 				}
 
 				return "#" + num;
-			}).join(", ") || "Fixed #????") + ".";
+			}).join(", ") || "#????") + ".";
 
 			msg += "\n\nMore Details:" + urls.map(function( url ) {
 				return "\n - " + url;
