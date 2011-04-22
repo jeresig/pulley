@@ -15,8 +15,7 @@ var repos = {
 	github_user = "",
 	github_token = "";
 
-var sys = require("sys"),
-	child = require("child_process"),
+var child = require("child_process"),
 	exec = child.exec,
 	spawn = child.spawn,
 	http = require("https"),
@@ -40,7 +39,7 @@ if ( !github_user || !github_token ) {
 				tracker = repos[ user_repo ];
 
 				if ( user_repo ) {
-					tracker = tracker || "https://github.com/" + user_repo + "/issues/"
+					tracker = tracker || "https://github.com/" + user_repo + "/issues/";
 
 					init();
 
