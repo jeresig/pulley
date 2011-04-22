@@ -120,7 +120,7 @@ function getPullData() {
 				}
 
 			} catch( e ) {
-				exit( "Error retreiving pull request from Github." );
+				exit( "Error retrieving pull request from Github." );
 			}
 		});
 	}).end();
