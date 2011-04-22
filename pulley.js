@@ -8,7 +8,8 @@
 // Specify the following to match what you use
 // for your project
 var repos = {
-		"jquery/jquery": "http://bugs.jquery.com/ticket/"
+		"jquery/jquery": "http://bugs.jquery.com/ticket/",
+		"jeresig/pulley": "https://github.com/jeresig/pulley/issues/"
 	},
 
 	// You can specify these inline or in the Git config
