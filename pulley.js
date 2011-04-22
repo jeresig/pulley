@@ -6,7 +6,6 @@
  */
 
 var // Application requirements
-	sys = require( "sys" ),
 	child = require( "child_process" ),
 	http = require( "https" ),
 	fs = require( "fs" ),
@@ -45,7 +44,7 @@ if ( !config.gitconfig.user || !config.gitconfig.token ) {
 				tracker = config.repos[ user_repo ];
 
 				if ( user_repo ) {
-					tracker = tracker || "https://github.com/" + user_repo + "/issues/"
+					tracker = tracker || "https://github.com/" + user_repo + "/issues/";
 
 					init();
 
