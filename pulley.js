@@ -179,22 +179,17 @@ function commit( pull ) {
 
 		res.on( "end", function() {
 			var author = (/From: (.*)/.exec( data.join("") ) || [])[1],
-				tmp = [], bugs = [], urls = [], msg = "",
+				tmp = {}, bugs = [], urls = [], msg = "",
 				search = pull.title + " " + pull.body,
 				findBug = /#(\d{4,5})/g,
 				match;
 
 			while ( (match = findBug.exec( search )) ) {
-				tmp.push( match[1] );
+				tmp[ match[1] ] = 1;
 			}
-
-			tmp.sort();
-
-			for ( var i = 0; i < tmp.length; i++ ) {
-				if ( bugs.length === 0 || bugs[ bugs.length - 1 ] !== tmp[i] ) {
-					bugs.push( tmp[i] );
-				}
-			}
+			
+			bugs = Object.keys( tmp );
+			bugs.sort();
 
 			msg = "Landing pull request " + id + ". " + pull.title + " Fixes ";
 
