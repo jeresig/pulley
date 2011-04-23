@@ -22,40 +22,18 @@ var // Application requirements
 	user_repo = "",
 	tracker = "", 
 
-	// Undef declarations
-	config;
-
-// Initialize config file
-config = new Function( "return " + fs.readFileSync( __dirname + "/config.js" ) )();
+	// Initialize config file
+	config = new Function( "return " + fs.readFileSync( __dirname + "/config.js" ) )();
 
 process.stdout.write( "Initializing... " );
 
 // If the user or token is blank, check git config and fill them in from there
 if ( !config.gitconfig.user || !config.gitconfig.token ) {
 	exec( "git config --get-regexp github", function( error, stdout, stderr ) {
-
 		config.gitconfig.user = config.gitconfig.user || (/github.user (.*)/.exec( stdout ) || [])[1];
 		config.gitconfig.token = config.gitconfig.token || (/github.token (.*)/.exec( stdout ) || [])[1];
 
-		// If user and token are good, run init. Otherwise exit with a message
-		if ( config.gitconfig.user && config.gitconfig.token ) {
-			exec( "git remote -v show origin", function( error, stdout, stderr ) {
-				user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
-				tracker = config.repos[ user_repo ];
-
-				if ( user_repo ) {
-					tracker = tracker || "https://github.com/" + user_repo + "/issues/";
-
-					init();
-
-				} else {
-					exit( "External repository not found." );
-				}
-			});
-
-		} else {
-			exit( "Please specify a Github username and token:\n  http://help.github.com/git-email-settings/" );
-		}
+		init();
 	});
 
 } else {
@@ -67,20 +45,25 @@ function init() {
 		exit( "No pull request ID specified, please provide one." );
 	}
 
-  // If gitconfig user/token were provided, we still need to get a repo label
-  if ( !user_repo && ( config.gitconfig.user && config.gitconfig.token ) ) {
+	// If user and token are good, run init. Otherwise exit with a message
+	if ( config.gitconfig.user && config.gitconfig.token ) {
+		exec( "git remote -v show origin", function( error, stdout, stderr ) {
+			user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
+			tracker = config.repos[ user_repo ];
 
-    exec( "git remote -v show origin", function( error, stdout, stderr ) {
+			if ( user_repo ) {
+				tracker = tracker || "https://github.com/" + user_repo + "/issues/";
 
-      user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
+				getStatus();
 
-      getStatus();
+			} else {
+				exit( "External repository not found." );
+			}
+		});
 
-    });
-  } else {
-
-    getStatus();
-  }
+	} else {
+		exit( "Please specify a Github username and token:\n  http://help.github.com/git-email-settings/" );
+	}
 }
 
 function getStatus() {
