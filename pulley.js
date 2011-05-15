@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+:!/usr/bin/env node
 /*
  * Pulley: Easy Github Pull Request Lander
  * Copyright 2011 John Resig
@@ -48,7 +48,7 @@ function init() {
 	// If user and token are good, run init. Otherwise exit with a message
 	if ( config.gitconfig.user && config.gitconfig.token ) {
 		exec( "git remote -v show origin", function( error, stdout, stderr ) {
-			user_repo = (/URL:.*?(\w+\/\w+)/.exec( stdout ) || [])[1];
+			user_repo = (/URL:.*?([\w-]+\/[\w-]+)/.exec( stdout ) || [])[1];
 			tracker = config.repos[ user_repo ];
 
 			if ( user_repo ) {
