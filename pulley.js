@@ -1,4 +1,4 @@
-:!/usr/bin/env node
+#!/usr/bin/env node
 /*
  * Pulley: Easy Github Pull Request Lander
  * Copyright 2011 John Resig
