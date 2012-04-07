@@ -11,7 +11,7 @@ Pulley is written using Node.js - thus you'll need to make sure that you have No
 
 How to use:
 
-Start by configuring the repo and bug tracker details in the config.js file. Once that's complete you can run the following command:
+Start by configuring the details in the config.json file. Once that's complete you can run the following command:
 
     node pulley.js PID # Where PID is the Pull Request ID
 

@@ -20,18 +20,18 @@ var // Application requirements
 
 	// Localized application references
 	user_repo = "",
-	tracker = "", 
+	tracker = "",
 
 	// Initialize config file
-	config = new Function( "return " + fs.readFileSync( __dirname + "/config.js" ) )();
+	config = JSON.parse(fs.readFileSync( __dirname + "/config.json" ));
 
 process.stdout.write( "Initializing... " );
 
-// If the user or token is blank, check git config and fill them in from there
-if ( !config.gitconfig.user || !config.gitconfig.token ) {
+// If the user or password is blank, check git config and fill them in from there
+if ( !config.gitconfig.user || !config.gitconfig.password) {
 	exec( "git config --get-regexp github", function( error, stdout, stderr ) {
 		config.gitconfig.user = config.gitconfig.user || (/github.user (.*)/.exec( stdout ) || [])[1];
-		config.gitconfig.token = config.gitconfig.token || (/github.token (.*)/.exec( stdout ) || [])[1];
+		config.gitconfig.password = config.gitconfig.password || (/github.password (.*)/.exec( stdout ) || [])[1];
 
 		init();
 	});
@@ -45,10 +45,11 @@ function init() {
 		exit( "No pull request ID specified, please provide one." );
 	}
 
-	// If user and token are good, run init. Otherwise exit with a message
-	if ( config.gitconfig.user && config.gitconfig.token ) {
-		exec( "git remote -v show origin", function( error, stdout, stderr ) {
-			user_repo = (/URL:.*?([\w-]+\/[\w-]+)/.exec( stdout ) || [])[1];
+	// If user and password are good, run init. Otherwise exit with a message
+	if ( config.gitconfig.user && config.gitconfig.password ) {
+
+		exec( "git remote -v show " + config.remote, function( error, stdout, stderr ) {
+			user_repo = (/URL:.*?([\w\-]+\/[\w\-]+)/.exec( stdout ) || [])[1];
 			tracker = config.repos[ user_repo ];
 
 			if ( user_repo ) {
@@ -62,13 +63,13 @@ function init() {
 		});
 
 	} else {
-		exit( "Please specify a Github username and token:\n  http://help.github.com/git-email-settings/" );
+		exit( "Please specify a Github username and password:\ngit config --global github.user USERNAME\ngit config --global github.password PASSWORD" );
 	}
 }
 
 function getStatus() {
 
-  exec( "git status", function( error, stdout, stderr ) {
+	exec( "git status", function( error, stdout, stderr ) {
 		if ( /Changes to be committed/i.test( stdout ) ) {
 			if ( done ) {
 				getPullData();
@@ -100,47 +101,38 @@ function getPullData() {
 	process.stdout.write( "done.\n" );
 	process.stdout.write( "Getting pull request details... " );
 
-	http.request({
-		host: "github.com",
-		port: 443,
-		path: "/api/v2/json/pulls/" + user_repo + "/" + id
-	}, function (res) {
-		var data = [];
+	callApi({
+		path: "/repos/" + user_repo + "/pulls/" + id
+	}, function( data ) {
+		try {
+			var pull = JSON.parse(data);
 
-		res.on( "data", function( chunk ) {
-			data.push( chunk );
-		});
+			process.stdout.write( "done.\n" );
 
-		res.on( "end", function() {
-			try {
-				var pull = JSON.parse( data.join("") ).pull;
-
-				process.stdout.write( "done.\n" );
-
-				if ( done ) {
-					commit( pull );
-
-				} else {
-					mergePull( pull );
-				}
-
-			} catch( e ) {
-				exit( "Error retrieving pull request from Github." );
+			if ( done ) {
+				commit( pull );
+			} else {
+				mergePull( pull );
 			}
-		});
-	}).end();
+
+		} catch( e ) {
+			exit( "Error retrieving pull request from Github." );
+		}
+	});
 }
 
 function mergePull( pull ) {
 	process.stdout.write( "Pulling and merging results... " );
 
-	var repo = pull.head.repository.url + ".git",
+	var repo = pull.head.repo.ssh_url,
 		repo_branch = pull.head.ref,
 		branch = "pull-" + id,
 		checkout = "git checkout -b " + branch;
 
-	exec( "git checkout master && git pull && " + checkout, function( error, stdout, stderr ) {
-		if ( /fatal/i.test( stderr ) ) {
+	exec( "git checkout master && git pull " + config.remote + " master && git submodule update --init && " + checkout, function( error, stdout, stderr ) {
+		if ( /toplevel/i.test( stderr ) ) {
+			exit( "please call pulley from the toplevel directory of this repository" );
+		} else if ( /fatal/i.test( stderr ) ) {
 			exec( "git branch -D " + branch + " && " + checkout, doPull );
 
 		} else {
@@ -171,94 +163,120 @@ function mergePull( pull ) {
 function commit( pull ) {
 	process.stdout.write( "Getting author and committing changes... " );
 
-	http.request({
-		host: "github.com",
-		port: 443,
-		path: "/" + user_repo + "/pull/" + id + ".patch"
-	}, function( res ) {
-		var data = [];
+	callApi({
+		path: "/repos/" + user_repo + "/pulls/" + id + "/commits"
+	}, function( data ) {
+		var author = JSON.parse(data)[0].commit.author.name,
+		tmp = {}, urls = [], msg = "",
+		search = pull.title + " " + pull.body,
+		findBug = /#(\d{4,5})/g,
+		match;
 
-		res.on( "data", function( chunk ) {
-			data.push( chunk );
-		});
+		while ( (match = findBug.exec( search )) ) {
+			tmp[ match[1] ] = 1;
+		}
 
-		res.on( "end", function() {
-			var author = (/From: (.*)/.exec( data.join("") ) || [])[1],
-				tmp = {}, urls = [], msg = "",
-				search = pull.title + " " + pull.body,
-				findBug = /#(\d{4,5})/g,
-				match;
+		msg = "Landing pull request " + id + ". " + pull.title + " Fixes ";
 
-			while ( (match = findBug.exec( search )) ) {
-				tmp[ match[1] ] = 1;
-			}
-			
-			msg = "Landing pull request " + id + ". " + pull.title + " Fixes ";
+		urls.push( pull.html_url );
 
-			urls.push( "https://github.com/" + user_repo + "/pull/" + id );
-
-			msg += (Object.keys( tmp ).sort().map(function( num ) {
-				if ( tracker ) {
-					urls.push( tracker + num );
-				}
-
-				return "#" + num;
-			}).join(", ") || "#????") + ".";
-
-			msg += "\n\nMore Details:" + urls.map(function( url ) {
-				return "\n - " + url;
-			}).join("");
-
-			var commit = [ "commit", "-a", "-e", "--message=" + msg ];
-
-			if ( author ) {
-				commit.push( "--author=" + author );
+		msg += (Object.keys( tmp ).sort().map(function( num ) {
+			if ( tracker ) {
+				urls.push( tracker + num );
 			}
 
-			getHEAD(function( oldCommit ) {
-				// Thanks to: https://gist.github.com/927052
-				spawn( "git", commit, { customFds:
-						[ process.stdin, process.stdout, process.stderr ] } )
-					.on("exit", function() {
-						getHEAD(function( newCommit ) {
-							if ( oldCommit === newCommit ) {
-								reset( "No commit, aborting push." );
+			return "#" + num;
+		}).join(", ") || "#????") + ".";
 
-							} else {
-								exec( "git push", function( error, stdout, stderr ) {
-									process.stdout.write( "done.\n" );
-									closePull( newCommit );
-								});
-							}
+		msg += "\n\nMore Details:" + urls.map(function( url ) {
+			return "\n - " + url;
+		}).join("");
+
+		var commit = [ "commit", "-a", "--message=" + msg ];
+
+		if ( config.interactive ) {
+			commit.push( "-e" );
+		}
+
+		if ( author ) {
+			commit.push( "--author=" + author );
+		}
+
+		getHEAD(function( oldCommit ) {
+			// Thanks to: https://gist.github.com/927052
+			spawn( "git", commit, {
+				customFds: [ process.stdin, process.stdout, process.stderr ]
+			}).on("exit", function() {
+				getHEAD(function( newCommit ) {
+
+					if ( oldCommit === newCommit ) {
+						reset( "No commit, aborting push." );
+					} else {
+						exec( "git push " + config.remote + " master", function( error, stdout, stderr ) {
+							process.stdout.write( "done.\n" );
+							closePull( newCommit );
 						});
-					});
+					}
+				});
 			});
 		});
-	}).end();
+	});
 }
 
 function closePull( commit ) {
 	process.stdout.write( "Commenting on and closing pull request... " );
 
-	var auth = "login=" + config.gitconfig.user + "&token=" + config.gitconfig.token;
-
-	http.request({
-		host: "github.com",
-		port: 443,
-		path: "/api/v2/json/issues/comment/" + user_repo + "/" + id,
-		method: "POST",
-		headers: { "Content-Type": "application/x-www-form-urlencoded" }
+	callApi({
+		path: "/repos/" + user_repo + "/issues/" + id + "/comments",
+		method: "POST"
 	}, function (res) {
-		http.request({
-			host: "github.com",
-			port: 443,
-			path: "/api/v2/json/issues/close/" + user_repo + "/" + id,
-			method: "POST",
-			headers: { "Content-Type": "application/x-www-form-urlencoded" }
+		callApi({
+			path: "/repos/" + user_repo + "/pulls/" + id,
+			method: "PATCH"
 		}, function() {
 			process.stdout.write( "done.\n" );
-		}).end( auth );
-	}).end( auth + "&comment=Landed in commit " + commit + "." );
+			exit();
+		}, { state: "closed"} );
+	},{ body: "Landed in commit " + commit + "." } );
+}
+
+function callApi(options, callback, data) {
+	setTimeout(function(){
+		var req, datastring;
+
+		options.host = options.host || "api.github.com";
+		options.port = 443;
+		options.headers = {
+			"Authorization": "Basic " + new Buffer(config.gitconfig.user + ":" + config.gitconfig.password).toString('base64'),
+			Host: "api.github.com"
+		};
+
+		if(data){
+			datastring = JSON.stringify(data);
+			options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+			options.headers['Content-Length'] = datastring.length;
+		}
+
+		req = http.request(options, function( res ) {
+			var data = [];
+
+			res.on( "data", function( chunk ) {
+				data.push( chunk );
+			});
+
+			res.on( "end", function() {
+				setTimeout(function(){
+					callback(data.join(""));
+				}, 1000);
+			});
+		});
+
+		if(data){
+			req.write(datastring);
+		}
+
+		req.end();
+	}, 1000);
 }
 
 function getHEAD( fn ) {

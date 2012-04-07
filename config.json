@@ -1,0 +1,11 @@
+{
+	"interactive": false,
+	"remote": "upstream",
+	"repos": {
+		"jquery/jquery": false
+	},
+	"gitconfig": {
+		"user": "",
+		"password": ""
+	}
+}
