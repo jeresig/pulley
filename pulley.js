@@ -176,9 +176,7 @@ function commit( pull ) {
 			tmp[ match[1] ] = 1;
 		}
 
-		msg = "Landing pull request " + id + ". " + pull.title + " Fixes ";
-
-		urls.push( pull.html_url );
+		msg = "Landing pull request, closes #" + id + ". " + pull.title + " Fixes ";
 
 		msg += (Object.keys( tmp ).sort().map(function( num ) {
 			if ( tracker ) {
@@ -214,30 +212,12 @@ function commit( pull ) {
 					} else {
 						exec( "git push " + config.remote + " master", function( error, stdout, stderr ) {
 							process.stdout.write( "done.\n" );
-							closePull( newCommit );
 						});
 					}
 				});
 			});
 		});
 	});
-}
-
-function closePull( commit ) {
-	process.stdout.write( "Commenting on and closing pull request... " );
-
-	callApi({
-		path: "/repos/" + user_repo + "/issues/" + id + "/comments",
-		method: "POST"
-	}, function (res) {
-		callApi({
-			path: "/repos/" + user_repo + "/pulls/" + id,
-			method: "PATCH"
-		}, function() {
-			process.stdout.write( "done.\n" );
-			exit();
-		}, { state: "closed"} );
-	},{ body: "Landed in commit " + commit + "." } );
 }
 
 function callApi(options, callback, data) {
