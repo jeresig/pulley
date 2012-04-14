@@ -1,16 +1,21 @@
 {
 	"name": "pulley",
-	"preferGlobal": "true",
-	"description": "Easy Github Pull Request Lander",
-	"keywords": [ "github", "git", "pull" ],
 	"version": "0.1.5",
+	"description": "Easy Github Pull Request Lander",
+	"keywords": [
+		"github",
+		"git",
+		"pull"
+	],
 	"homepage": "https://github.com/jeresig/pulley",
-	"author": "John Resig (http://ejohn.org/)",
-	"bin": { "pulley": "./pulley.js" },
+	"bugs": "https://github.com/jeresig/pulley/issues",
+	"author": "John Resig (http://ejohn.org)",
+	"bin": "./pulley.js",
 	"repository": {
 		"type": "git",
 		"url": "git://github.com/jeresig/pulley.git"
 	},
+	"preferGlobal": "true",
 	"licenses": [{
 		"type": "MIT",
 		"url": "https://github.com/jeresig/pulley/blob/master/LICENSE"
