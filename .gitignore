@@ -1,0 +1,7 @@
+.project
+.settings
+.buildpath
+*~
+*.diff
+*.patch
+.DS_Store
