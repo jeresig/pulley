@@ -2,7 +2,7 @@
 	"interactive": false,
 	"remote": "upstream",
 	"repos": {
-		"jquery/jquery": false
+		"jeresig/pulley": false
 	},
 	"gitconfig": {
 		"user": "",
