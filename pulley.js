@@ -166,25 +166,28 @@ function commit( pull ) {
 	callApi({
 		path: "/repos/" + user_repo + "/pulls/" + id + "/commits"
 	}, function( data ) {
-		var author = JSON.parse(data)[0].commit.author.name,
-		tmp = {}, urls = [], msg = "",
-		search = pull.title + " " + pull.body,
-		findBug = /#(\d{4,5})/g,
-		match;
+		var match,
+			msg = "Pull Request Closes #" + id + ": " + pull.title + ".",
+			author = JSON.parse(data)[0].commit.author.name,
+			issues = [],
+			urls = [],
+			findBug = /#(\d+)/g;
 
-		while ( (match = findBug.exec( search )) ) {
-			tmp[ match[1] ] = 1;
+		// search title and body for issues
+		// for issues to link to
+		if ( tracker ) {
+			while ( (match = findBug.exec( pull.title + pull.body )) ) {
+				urls.push( tracker + match[1] );
+			}
 		}
 
-		msg = "Landing pull request, closes #" + id + ". " + pull.title + " Fixes ";
+		// search just body for issues to add to the commit message
+		while ( (match = findBug.exec( pull.body )) ) {
+			issues.push( " Fixes #" + match[1] );
+		}
 
-		msg += (Object.keys( tmp ).sort().map(function( num ) {
-			if ( tracker ) {
-				urls.push( tracker + num );
-			}
-
-			return "#" + num;
-		}).join(", ") || "#????") + ".";
+		// add issues to the commit message
+		msg += issues.join(",");
 
 		if ( urls.length ) {
 			msg += "\n\nMore Details:" + urls.map(function( url ) {
