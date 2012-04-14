@@ -186,9 +186,11 @@ function commit( pull ) {
 			return "#" + num;
 		}).join(", ") || "#????") + ".";
 
-		msg += "\n\nMore Details:" + urls.map(function( url ) {
-			return "\n - " + url;
-		}).join("");
+		if ( urls.length ) {
+			msg += "\n\nMore Details:" + urls.map(function( url ) {
+				return "\n - " + url;
+			}).join("");
+		}
 
 		var commit = [ "commit", "-a", "--message=" + msg ];
 
@@ -212,6 +214,7 @@ function commit( pull ) {
 					} else {
 						exec( "git push " + config.remote + " master", function( error, stdout, stderr ) {
 							process.stdout.write( "done.\n" );
+							exit();
 						});
 					}
 				});
