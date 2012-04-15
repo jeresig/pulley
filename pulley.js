@@ -126,6 +126,19 @@
 	function mergePull( pull ) {
 		process.stdout.write( "Pulling and merging results... " );
 
+		if( pull.state === "closed" ) {
+			exit( "Can not merge closed Pull Requests. " );
+		}
+
+		if ( pull.merged ) {
+			exit( "This Pull Request has already been merged. " );
+		}
+
+		// TODO: give user the option to resolve the merge by themselves
+		if ( !pull.mergeable ) {
+			exit( "This Pull Request is not automatically mergeable. " );
+		}
+
 		var repo = pull.head.repo.ssh_url,
 			repo_branch = pull.head.ref,
 			branch = "pull-" + id,
