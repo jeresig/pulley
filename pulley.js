@@ -4,6 +4,8 @@
  * Copyright 2011 John Resig
  * MIT Licensed
  */
+(function() {
+"use strict";
 
 var // Application requirements
 	child = require( "child_process" ),
@@ -290,3 +292,5 @@ function exit( msg ) {
 
 	process.exit( 1 );
 }
+
+})();
