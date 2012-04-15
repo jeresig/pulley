@@ -182,7 +182,7 @@
 			path: "/repos/" + user_repo + "/pulls/" + id + "/commits"
 		}, function( data ) {
 			var match,
-				msg = "Pull Request Closes #" + id + ": " + pull.title + ".",
+				msg = "Closes #" + id + ": " + pull.title + ".",
 				author = JSON.parse(data)[0].commit.author.name,
 				issues = [],
 				urls = [],
