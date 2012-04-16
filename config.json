@@ -4,8 +4,5 @@
 	"repos": {
 		"jeresig/pulley": false
 	},
-	"gitconfig": {
-		"user": "",
-		"password": ""
-	}
+	"githubToken": ""
 }
