@@ -15,6 +15,10 @@
 		"type": "git",
 		"url": "git://github.com/jeresig/pulley.git"
 	},
+	"dependencies": {
+		"prompt": "~0.1.12",
+		"request": "~2.9.202"
+	},
 	"preferGlobal": "true",
 	"licenses": [{
 		"type": "MIT",
