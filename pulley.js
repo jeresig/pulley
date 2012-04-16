@@ -25,21 +25,24 @@
 		// Localized application references
 		user_repo = "",
 		tracker = "",
+		token = "",
 
 		// Initialize config file
-		configPath = __dirname + "/config.json",
-		config = JSON.parse( fs.readFileSync( configPath ) );
+		config = JSON.parse( fs.readFileSync( __dirname + "/config.json" ) );
 
 	// We don't want the default prompt message
 	prompt.message = "";
 
 	process.stdout.write( "Initializing... " );
 
-	if ( config.githubToken ) {
-		init();
-	} else {
-		login();
-	}
+	exec( "git config --global --get pulley.token", function( error, stdout, stderr ) {
+		token = stdout;
+		if ( token ) {
+			init();
+		} else {
+			login();
+		}
+	});
 
 	function login() {
 		console.log("Please login with your GitHub credentials.");
@@ -64,12 +67,12 @@
 					note_url: "https://github.com/jeresig/pulley"
 				}
 			}, function( err, res, body ) {
-				var token = body.token;
+				token = body.token;
 				if ( token ) {
-					config.githubToken = body.token;
-					fs.writeFileSync( configPath, JSON.stringify( config, null, "\t" ) );
-					console.log( "Success! The token is saved in config.js".green );
-					init();
+					exec( "git config --global --add pulley.token " + token, function( error, stdout, stderr ) {
+						console.log( "Success!".green );
+						init();
+					});
 				} else {
 					console.log( ( body.message + ". Try again." ).red );
 					login();
@@ -277,7 +280,7 @@
 			options.host = options.host || "api.github.com";
 			options.port = 443;
 			options.headers = {
-				Authorization: "token " + config.githubToken,
+				Authorization: "token " + token,
 				Host: "api.github.com"
 			};
 
