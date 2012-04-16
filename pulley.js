@@ -11,6 +11,8 @@
 		child = require( "child_process" ),
 		http = require( "https" ),
 		fs = require( "fs" ),
+		prompt = require("prompt"),
+		request = require("request"),
 
 		// Process references
 		exec = child.exec,
@@ -23,50 +25,79 @@
 		// Localized application references
 		user_repo = "",
 		tracker = "",
+		token = "",
 
 		// Initialize config file
-		config = JSON.parse(fs.readFileSync( __dirname + "/config.json" ));
+		config = JSON.parse( fs.readFileSync( __dirname + "/config.json" ) );
+
+	// We don't want the default prompt message
+	prompt.message = "";
 
 	process.stdout.write( "Initializing... " );
 
-	// If the user or password is blank, check git config and fill them in from there
-	if ( !config.gitconfig.user || !config.gitconfig.password) {
-		exec( "git config --get-regexp github", function( error, stdout, stderr ) {
-			config.gitconfig.user = config.gitconfig.user || (/github.user (.*)/.exec( stdout ) || [])[1];
-			config.gitconfig.password = config.gitconfig.password || (/github.password (.*)/.exec( stdout ) || [])[1];
-
+	exec( "git config --global --get pulley.token", function( error, stdout, stderr ) {
+		token = stdout;
+		if ( token ) {
 			init();
-		});
+		} else {
+			login();
+		}
+	});
 
-	} else {
-		init();
+	function login() {
+		console.log("Please login with your GitHub credentials.");
+		console.log("Your credentials are only needed this one time to get a token from GitHub.");
+		prompt.start();
+		prompt.get([{
+			name: "username",
+			message: "Username",
+			empty: false
+		}, {
+			name: "password",
+			message: "Password",
+			empty: false,
+			hidden: true
+		}], function( err, result ) {
+			var auth = result.username + ":" + result.password;
+			request.post("https://" + auth + "@api.github.com/authorizations", {
+				json: true,
+				body: {
+					scopes: ["repo"],
+					note: "Pulley",
+					note_url: "https://github.com/jeresig/pulley"
+				}
+			}, function( err, res, body ) {
+				token = body.token;
+				if ( token ) {
+					exec( "git config --global --add pulley.token " + token, function( error, stdout, stderr ) {
+						console.log( "Success!".green );
+						init();
+					});
+				} else {
+					console.log( ( body.message + ". Try again." ).red );
+					login();
+				}
+			});
+		});
 	}
 
 	function init() {
 		if ( !id ) {
 			exit( "No pull request ID specified, please provide one." );
 		}
+		exec( "git remote -v show " + config.remote, function( error, stdout, stderr ) {
+			user_repo = (/URL:.*?([\w\-]+\/[\w\-]+)/.exec( stdout ) || [])[1];
+			tracker = config.repos[ user_repo ];
 
-		// If user and password are good, run init. Otherwise exit with a message
-		if ( config.gitconfig.user && config.gitconfig.password ) {
+			if ( user_repo ) {
+				tracker = tracker || "https://github.com/" + user_repo + "/issues/";
 
-			exec( "git remote -v show " + config.remote, function( error, stdout, stderr ) {
-				user_repo = (/URL:.*?([\w\-]+\/[\w\-]+)/.exec( stdout ) || [])[1];
-				tracker = config.repos[ user_repo ];
+				getStatus();
 
-				if ( user_repo ) {
-					tracker = tracker || "https://github.com/" + user_repo + "/issues/";
-
-					getStatus();
-
-				} else {
-					exit( "External repository not found." );
-				}
-			});
-
-		} else {
-			exit( "Please specify a Github username and password:\ngit config --global github.user USERNAME\ngit config --global github.password PASSWORD" );
-		}
+			} else {
+				exit( "External repository not found." );
+			}
+		});
 	}
 
 	function getStatus() {
@@ -241,6 +272,7 @@
 		});
 	}
 
+	// TODO: Add check to API call if autorization fails. Show login to reauthorize.
 	function callApi(options, callback, data) {
 		setTimeout(function(){
 			var req, datastring;
@@ -248,7 +280,7 @@
 			options.host = options.host || "api.github.com";
 			options.port = 443;
 			options.headers = {
-				"Authorization": "Basic " + new Buffer(config.gitconfig.user + ":" + config.gitconfig.password).toString('base64'),
+				Authorization: "token " + token,
 				Host: "api.github.com"
 			};
 
