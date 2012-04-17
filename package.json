@@ -1,6 +1,6 @@
 {
 	"name": "pulley",
-	"version": "0.1.7",
+	"version": "0.2.0",
 	"description": "Easy Github Pull Request Lander",
 	"keywords": [
 		"github",
