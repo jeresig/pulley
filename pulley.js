@@ -90,10 +90,7 @@
 			tracker = config.repos[ user_repo ];
 
 			if ( user_repo ) {
-				tracker = tracker || "https://github.com/" + user_repo + "/issues/";
-
 				getStatus();
-
 			} else {
 				exit( "External repository not found." );
 			}
