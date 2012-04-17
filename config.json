@@ -3,6 +3,5 @@
 	"remote": "upstream",
 	"repos": {
 		"jeresig/pulley": false
-	},
-	"githubToken": ""
+	}
 }
