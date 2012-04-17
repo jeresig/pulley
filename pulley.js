@@ -36,7 +36,8 @@
 	process.stdout.write( "Initializing... " );
 
 	exec( "git config --global --get pulley.token", function( error, stdout, stderr ) {
-		token = stdout;
+		token = trim( stdout );
+
 		if ( token ) {
 			init();
 		} else {
@@ -144,7 +145,6 @@
 				} else {
 					mergePull( pull );
 				}
-
 			} catch( e ) {
 				exit( "Error retrieving pull request from Github." );
 			}
@@ -333,6 +333,10 @@
 		}
 
 		process.exit( 1 );
+	}
+
+	function trim( string ) {
+		return string.replace(/^\s*|\s*$/g, '');
 	}
 
 })();
