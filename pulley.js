@@ -202,7 +202,7 @@
 			path: "/repos/" + user_repo + "/pulls/" + id + "/commits"
 		}, function( data ) {
 			var match,
-				msg = "Closes #" + id + ": " + pull.title + ".",
+				msg = "Closes GH-" + id + ": " + pull.title + ".",
 				author = JSON.parse( data )[ 0 ].commit.author.name,
 				issues = [],
 				urls = [],
