@@ -147,9 +147,15 @@
 
 	function mergePull( pull ) {
 		var repo = pull.head.repo.ssh_url,
-			repo_branch = pull.head.ref,
+			head_branch = pull.head.ref,
+			base_branch = pull.base.ref,
 			branch = "pull-" + id,
-			checkout = "git checkout -b " + branch;
+			checkout_cmds = [
+				"git checkout " + base_branch,
+				"git pull " + config.remote + " " + base_branch,
+				"git submodule update --init",
+				"git checkout -b " + branch
+			];
 
 		process.stdout.write("Pulling and merging results... ");
 
@@ -166,7 +172,7 @@
 			exit("This Pull Request is not automatically mergeable.");
 		}
 
-		exec( "git checkout master && git pull " + config.remote + " master && git submodule update --init && " + checkout, function( error, stdout, stderr ) {
+		exec( checkout_cmds.join( " && " ), function( error, stdout, stderr ) {
 			if ( /toplevel/i.test( stderr ) ) {
 				exit("Please call pulley from the toplevel directory of this repo.");
 			} else if ( /fatal/i.test( stderr ) ) {
@@ -178,8 +184,8 @@
 
 		function doPull( error, stdout, stderr ) {
 			var pull_cmds = [
-				"git pull " + repo + " " + repo_branch,
-				"git checkout master",
+				"git pull " + repo + " " + head_branch,
+				"git checkout " + base_branch,
 				"git merge --no-commit --squash " + branch
 			];
 
@@ -202,8 +208,9 @@
 			path: "/repos/" + user_repo + "/pulls/" + id + "/commits"
 		}, function( data ) {
 			var match,
-				msg = "Closes GH-" + id + ": " + pull.title + ".",
+				msg = "Close GH-" + id + ": " + pull.title + ".",
 				author = JSON.parse( data )[ 0 ].commit.author.name,
+				base_branch = pull.base.ref,
 				issues = [],
 				urls = [],
 				findBug = /#(\d+)/g;
@@ -248,7 +255,7 @@
 						if ( oldCommit === newCommit ) {
 							reset("No commit, aborting push.");
 						} else {
-							exec( "git push " + config.remote + " master", function( error, stdout, stderr ) {
+							exec( "git push " + config.remote + " " + base_branch, function( error, stdout, stderr ) {
 								process.stdout.write("done.\n");
 								exit();
 							});
