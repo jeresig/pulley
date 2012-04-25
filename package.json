@@ -17,7 +17,8 @@
 	},
 	"dependencies": {
 		"prompt": "~0.1.12",
-		"request": "~2.9.202"
+		"request": "~2.9.202",
+		"colors": "~0.6.0"
 	},
 	"preferGlobal": "true",
 	"licenses": [{

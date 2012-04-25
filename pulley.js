@@ -12,6 +12,7 @@
 		fs = require("fs"),
 		prompt = require("prompt"),
 		request = require("request"),
+		colors = require("colors"),
 
 		// Process references
 		exec = child.exec,
@@ -32,7 +33,7 @@
 	// We don't want the default prompt message
 	prompt.message = "";
 
-	process.stdout.write("Initializing... ");
+	process.stdout.write( "Initializing... ".blue );
 
 	exec( "git config --global --get pulley.token", function( error, stdout, stderr ) {
 		token = trim( stdout );
@@ -123,8 +124,8 @@
 	}
 
 	function getPullData() {
-		process.stdout.write("done.\n");
-		process.stdout.write("Getting pull request details... ");
+		console.log( "done.".green );
+		process.stdout.write( "Getting pull request details... ".blue );
 
 		callApi({
 			path: "/repos/" + user_repo + "/pulls/" + id
@@ -132,7 +133,7 @@
 			try {
 				var pull = JSON.parse( data );
 
-				process.stdout.write("done.\n");
+				console.log( "done.".green );
 
 				if ( done ) {
 					commit( pull );
@@ -157,7 +158,7 @@
 				"git checkout -b " + branch
 			];
 
-		process.stdout.write("Pulling and merging results... ");
+		process.stdout.write( "Pulling and merging results... ".blue );
 
 		if ( pull.state === "closed" ) {
 			exit("Can not merge closed Pull Requests.");
@@ -194,7 +195,7 @@
 					exit("Merge conflict. Please resolve then run: " +
 						process.argv.join(" ") + " done");
 				} else {
-					process.stdout.write("done.\n");
+					console.log( "done.".green );
 					commit( pull );
 				}
 			});
@@ -202,7 +203,7 @@
 	}
 
 	function commit( pull ) {
-		process.stdout.write("Getting author and committing changes... ");
+		process.stdout.write( "Getting author and committing changes... ".blue );
 
 		callApi({
 			path: "/repos/" + user_repo + "/pulls/" + id + "/commits"
@@ -256,7 +257,7 @@
 							reset("No commit, aborting push.");
 						} else {
 							exec( "git push " + config.remote + " " + base_branch, function( error, stdout, stderr ) {
-								process.stdout.write("done.\n");
+								console.log( "done.".green );
 								exit();
 							});
 						}
@@ -315,18 +316,18 @@
 	}
 
 	function reset( msg ) {
-		console.error( "\n" + msg );
-		process.stderr.write("Resetting files... ");
+		console.error( ( "\n" + msg ).red );
+		process.stderr.write( "Resetting files... ".red );
 
 		exec( "git reset --hard ORIG_HEAD", function() {
-			process.stderr.write("done.\n");
+			console.log( "done.".green );
 			exit();
 		});
 	}
 
 	function exit( msg ) {
 		if ( msg ) {
-			console.error( "\nError: " + msg );
+			console.error( ( "\nError: " + msg ).red );
 		}
 
 		process.exit( 1 );
