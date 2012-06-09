@@ -36,7 +36,7 @@
 	process.stdout.write( "Initializing... ".blue );
 
 	exec( "git config --global --get pulley.token", function( error, stdout, stderr ) {
-		token = trim( stdout );
+		token = stdout.trim();
 
 		if ( token ) {
 			init();
@@ -331,10 +331,6 @@
 		}
 
 		process.exit( 1 );
-	}
-
-	function trim( string ) {
-		return string.replace( /^\s*|\s*$/g, '' );
 	}
 
 })();
