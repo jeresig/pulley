@@ -46,7 +46,7 @@
 	});
 
 	function login() {
-		console.log("Please login with your GitHub credentials.");
+		console.log("\nPlease login with your GitHub credentials.");
 		console.log("Your credentials are only needed this one time to get a token from GitHub.");
 		prompt.start();
 		prompt.get([{
@@ -124,12 +124,12 @@
 	}
 
 	function getPullData() {
+		var path = "/repos/" + user_repo + "/pulls/" + id;
+
 		console.log( "done.".green );
 		process.stdout.write( "Getting pull request details... ".blue );
 
-		callApi({
-			path: "/repos/" + user_repo + "/pulls/" + id
-		}, function( data ) {
+		callAPI( path, function( data ) {
 			try {
 				var pull = JSON.parse( data );
 
@@ -203,11 +203,11 @@
 	}
 
 	function commit( pull ) {
+		var path = "/repos/" + user_repo + "/pulls/" + id + "/commits";
+
 		process.stdout.write( "Getting author and committing changes... ".blue );
 
-		callApi({
-			path: "/repos/" + user_repo + "/pulls/" + id + "/commits"
-		}, function( data ) {
+		callAPI( path, function( data ) {
 			var match,
 				msg = "Close GH-" + id + ": " + pull.title + ".",
 				author = JSON.parse( data )[ 0 ].commit.author.name,
@@ -267,44 +267,29 @@
 		});
 	}
 
-	// TODO: Add check to API call if autorization fails. Show login to reauthorize.
-	function callApi( options, callback, data ) {
-		setTimeout(function() {
-			var req, datastring;
+	function callAPI( path, callback ) {
+		request.get( "https://api.github.com" + path, {
+			headers: {
+				Authorization: "token " + token
+			}
+		}, function( err, res, body ) {
+			var statusCode = res.socket._httpMessage.res.statusCode;
 
-			options.host = options.host || "api.github.com";
-			options.port = 443;
-			options.headers = {
-				Authorization: "token " + token,
-				Host: "api.github.com"
-			};
-
-			if ( data ) {
-				datastring = JSON.stringify( data );
-				options.headers["Content-Type"] = "application/x-www-form-urlencoded";
-				options.headers["Content-Length"] = datastring.length;
+			if ( err ) {
+				exit( err );
 			}
 
-			req = http.request( options, function( res ) {
-				var data = [];
-
-				res.on( "data", function( chunk ) {
-					data.push( chunk );
-				});
-
-				res.on( "end", function() {
-					setTimeout(function() {
-						callback( data.join("") );
-					}, 1000);
-				});
-			});
-
-			if ( data ) {
-				req.write( datastring );
+			if ( statusCode === 404 ) {
+				exit("Pull request doesn't exist");
 			}
 
-			req.end();
-		}, 1000);
+			if ( statusCode === 401 ) {
+				login();
+				return;
+			}
+
+			callback( body );
+		});
 	}
 
 	function getHEAD( fn ) {
