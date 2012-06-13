@@ -59,7 +59,7 @@
 			empty: false,
 			hidden: true
 		}], function( err, result ) {
-			var auth = result.username + ":" + result.password;
+			var auth = encodeURIComponent( result.username ) + ":" + encodeURIComponent( result.password );
 			request.post("https://" + auth + "@api.github.com/authorizations", {
 				json: true,
 				body: {
