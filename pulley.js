@@ -151,8 +151,9 @@
 			head_branch = pull.head.ref,
 			base_branch = pull.base.ref,
 			branch = "pull-" + id,
+			checkout = "git checkout " + base_branch,
 			checkout_cmds = [
-				"git checkout " + base_branch,
+				checkout,
 				"git pull " + config.remote + " " + base_branch,
 				"git submodule update --init",
 				"git checkout -b " + branch
@@ -186,7 +187,7 @@
 		function doPull( error, stdout, stderr ) {
 			var pull_cmds = [
 				"git pull " + repo + " " + head_branch,
-				"git checkout " + base_branch,
+				checkout,
 				"git merge --no-commit --squash " + branch
 			];
 
