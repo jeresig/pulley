@@ -194,6 +194,8 @@
 				if ( /Merge conflict/i.test( stdout ) ) {
 					exit("Merge conflict. Please resolve then run: " +
 						process.argv.join(" ") + " done");
+				} else if ( /error/.test( stderr ) ) {
+					exit("Unable to merge.  Please resolve then retry:\n" + stderr);
 				} else {
 					console.log( "done.".green );
 					commit( pull );
