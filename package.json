@@ -1,6 +1,6 @@
 {
 	"name": "pulley",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "Easy Github Pull Request Lander",
 	"keywords": [
 		"github",
@@ -16,7 +16,7 @@
 		"url": "git://github.com/jeresig/pulley.git"
 	},
 	"dependencies": {
-		"prompt": "~0.1.12",
+		"prompt": "~0.2.5",
 		"request": "~2.9.202",
 		"colors": "~0.6.0"
 	},
