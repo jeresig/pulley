@@ -87,7 +87,7 @@
 			exit("No pull request ID specified, please provide one.");
 		}
 		exec( "git remote -v show " + config.remote, function( error, stdout, stderr ) {
-			user_repo = ( /URL:.*?([\w\-]+\/[\w\-]+)/.exec( stdout ) || [] )[ 1 ];
+			user_repo = ( /URL:.*?([\w\-]+\/[\w\-]+)$/m.exec( stdout ) || [] )[ 1 ];
 			tracker = config.repos[ user_repo ];
 
 			if ( user_repo ) {
