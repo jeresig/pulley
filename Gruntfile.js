@@ -4,11 +4,11 @@ module.exports = function( grunt ) {
 
 	grunt.initConfig({
 		lint: {
-			files: ['grunt.js', 'pulley.js']
+			files: ['Gruntfile.js', 'pulley.js']
 		},
 		watch: {
-			files: '<config:lint.files>',
-			tasks: 'lint'
+			files: '<%= config:lint.files %>',
+			tasks: 'jshint'
 		},
 		jshint: {
 			options: {
@@ -29,6 +29,9 @@ module.exports = function( grunt ) {
 		}
 	});
 
-	grunt.registerTask('default', 'lint');
+	grunt.loadNpmTasks('grunt-contrib-jshint');
+	grunt.loadNpmTasks('grunt-contrib-watch');
+
+	grunt.registerTask('default', 'jshint');
 
 };

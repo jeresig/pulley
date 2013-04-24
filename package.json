@@ -21,7 +21,8 @@
 		"colors": "~0.6.0"
 	},
 	"devDependencies": {
-		"grunt": "~0.3.9"
+		"grunt": "~0.4.1",
+		"grunt-contrib-jshint": "~0.4.3"
 	},
 	"preferGlobal": "true",
 	"licenses": [{
