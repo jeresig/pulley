@@ -8,7 +8,9 @@
 		"pull"
 	],
 	"homepage": "https://github.com/jeresig/pulley",
-	"bugs": "https://github.com/jeresig/pulley/issues",
+	"bugs": {
+		"url": "https://github.com/jeresig/pulley/issues"
+	},
 	"author": "John Resig (http://ejohn.org)",
 	"bin": "./pulley.js",
 	"repository": {
