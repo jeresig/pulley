@@ -13,6 +13,7 @@
 		prompt = require("prompt"),
 		request = require("request"),
 		colors = require("colors"),
+		pkg = require("./package"),
 
 		// Process references
 		exec = child.exec,
@@ -273,7 +274,8 @@
 	function callAPI( path, callback ) {
 		request.get( "https://api.github.com" + path, {
 			headers: {
-				Authorization: "token " + token
+				Authorization: "token " + token,
+				"User-Agent": "Pulley " + pkg.version
 			}
 		}, function( err, res, body ) {
 			var statusCode = res.socket._httpMessage.res.statusCode;
