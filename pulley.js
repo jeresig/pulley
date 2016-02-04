@@ -68,7 +68,7 @@
 				},
 				body: {
 					scopes: ["repo"],
-					note: "Pulley",
+					note: "Pulley-" + Date.now(),
 					note_url: "https://github.com/jeresig/pulley"
 				}
 			}, function( err, res, body ) {
