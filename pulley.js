@@ -260,9 +260,7 @@
 
 			getHEAD(function( oldCommit ) {
 				// Thanks to: https://gist.github.com/927052
-				spawn( "git", commit, {
-					customFds: [ process.stdin, process.stdout, process.stderr ]
-				}).on( "exit", function() {
+				spawn( "git", commit, { stdio:  'inherit' }).on( "exit", function() {
 					getHEAD(function( newCommit ) {
 						if ( oldCommit === newCommit ) {
 							reset("No commit, aborting push.");
