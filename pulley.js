@@ -10,6 +10,7 @@
 	var child = require("child_process"),
 		http = require("https"),
 		fs = require("fs"),
+		os = require("os"),
 		prompt = require("prompt"),
 		request = require("request"),
 		colors = require("colors"),
@@ -68,7 +69,7 @@
 				},
 				body: {
 					scopes: ["repo"],
-					note: "Pulley-" + Date.now(),
+					note: "Pulley-" + os.hostname(),
 					note_url: "https://github.com/jeresig/pulley"
 				}
 			}, function( err, res, body ) {
